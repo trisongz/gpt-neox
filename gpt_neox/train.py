@@ -76,6 +76,7 @@ def train():
     train_dataset = TFDSDataset(tokenizer, params["seq_len"], 'train')
     val_dataset = TFDSDataset(tokenizer, params["seq_len"], 'validation')
 
+    train_loader = DataLoader(train_dataset, batch_size=params["train_batch_size"])
     val_loader = DataLoader(val_dataset, batch_size=params["eval_batch_size"])
     val_loader = iter(val_loader)
 
@@ -86,11 +87,15 @@ def train():
     ds_model_params = prepare_optimizer_parameters(model)
 
     # deepspeed loader
-    model_engine, optim, train_loader, _ = deepspeed.initialize(args=train_args,
+    #model_engine, optim, train_loader, _ = deepspeed.initialize(args=train_args,
+    #                                                            model=model,
+    #                                                            optimizer=optim,
+    #                                                            model_parameters=ds_model_params,
+    #                                                    training_data=train_dataset)
+    model_engine, optim, _, _ = deepspeed.initialize(args=train_args,
                                                                 model=model,
                                                                 optimizer=optim,
-                                                                model_parameters=ds_model_params,
-                                                        training_data=train_dataset)
+                                                                model_parameters=ds_model_params)
 
     pbar = tqdm(enumerate(train_loader), mininterval=10., desc='Training Model', dynamic_ncols=True)
     #for _ in pbar:
