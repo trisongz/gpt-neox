@@ -1,4 +1,4 @@
-from gpt_neox import (GPTNeoX, AutoregressiveWrapper, GPT2Dataset,
+from gpt_neox import (GPTNeoX, AutoregressiveWrapper, GPT2Dataset, TFDSDataset,
                         prepare_optimizer_parameters, get_tokenizer)
 import random
 import torch
@@ -42,12 +42,12 @@ def train():
     params = get_params(train_args.model)
 
     # tokenizer
-    #tokenizer = get_tokenizer(tokenizer_type=params["tokenizer"].get("type", None),
-    #                        from_pretrained=params["tokenizer"].get("from_pretrained", True),
-    #                        add_padding_token=params["tokenizer"].get("add_padding_token", False))
+    tokenizer = get_tokenizer(tokenizer_type=params["tokenizer"].get("type", 'hf_gp2tokenizer'),
+                           from_pretrained=params["tokenizer"].get("from_pretrained", True),
+                            add_padding_token=params["tokenizer"].get("add_padding_token", False))
 
-    #vocab_size = len(tokenizer) if params["vocab_size"] is None else params["vocab_size"]
-    vocab_size = 50258
+    vocab_size = len(tokenizer) if params["vocab_size"] is None else params["vocab_size"]
+    #vocab_size = 50258
 
     # instantiate GPT-like decoder model
     model = GPTNeoX(
@@ -73,10 +73,10 @@ def train():
     #                           seq_len=params["seq_len"],
     #                           train=False,
     #                           **dset_params)
-    train_dataset = TFDSDataset(params["seq_len"], 'train')
-    val_dataset = TFDSDataset(params["seq_len"], 'validation')
+    train_dataset = TFDSDataset(tokenizer, params["seq_len"], 'train')
+    val_dataset = TFDSDataset(tokenizer, params["seq_len"], 'validation')
 
-    val_loader = DataLoader(eval_dataset, batch_size=params["eval_batch_size"])
+    val_loader = DataLoader(val_dataset, batch_size=params["eval_batch_size"])
     val_loader = iter(val_loader)
 
     # optimizer

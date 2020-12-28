@@ -137,13 +137,14 @@ class TextSamplerDataset(Dataset):
 
 
 class TFDSDataset(Dataset):
-    def __init__(self, seq_len, split='train'):
+    def __init__(self, tokenizer, seq_len, split='train'):
         super().__init__()
         dataset, info = tfds.load(name="ThePile", try_gcs=True, with_info=True)
         self.ds, self.num_examples = dataset[split], info.splits[split].num_examples
         self.data = iter(tfds.as_numpy(self.ds))
-        self.tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
-        self.tokenizer.add_special_tokens({'pad_token': '<|padding|>'})
+        self.tokenizer = tokenizer
+        #self.tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
+        #self.tokenizer.add_special_tokens({'pad_token': '<|padding|>'})
         self.seq_len = seq_len
         print(f'Items in {split} dataset: ', self.num_examples)
     
