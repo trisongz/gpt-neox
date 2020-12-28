@@ -7,6 +7,9 @@ import tensorflow as tf
 import re
 import logging
 from itertools import cycle
+from transformers import GPT2Tokenizer
+from gpt_neox.the_pile import ThePile
+import tensorflow_datasets as tfds
 
 class GPT2Dataset(Dataset):
 
@@ -130,3 +133,27 @@ class TextSamplerDataset(Dataset):
 
     def __len__(self):
         return self.data.size(0) // self.seq_len
+
+
+
+class TFDSDataset(Dataset):
+    def __init__(self, seq_len, split='train'):
+        super().__init__()
+        dataset, info = tfds.load(name="ThePile", try_gcs=True, with_info=True)
+        self.ds, self.num_examples = dataset[split], info.splits[split].num_examples
+        self.data = iter(tfds.as_numpy(self.ds))
+        self.tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
+        self.tokenizer.add_special_tokens({'pad_token': '<|padding|>'})
+        self.seq_len = seq_len
+        print(f'Items in {split} dataset: ', self.num_examples)
+    
+    def tokenize(self, item):
+        txt = item['text']
+        print(txt)
+        return self.tokenizer.encode(txt, max_length=self.seq_len, truncation=True, padding='max_length', return_tensors='pt')
+
+    def __getitem__(self, idx):
+        return self.tokenize(next(self.data))
+
+    def __len__(self):
+        return self.num_examples

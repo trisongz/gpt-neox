@@ -3,5 +3,3 @@ torch>=1.6
 tqdm>=4.50.0
 deepspeed
 transformers
-tensorflow==1.15.2
-triton
