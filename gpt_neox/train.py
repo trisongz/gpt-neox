@@ -4,7 +4,7 @@ import random
 import torch
 from torch.utils.data import DataLoader
 import deepspeed
-from tqdm.auto import trange
+from tqdm.auto import trange, tqdm
 import argparse
 import json
 from collections import defaultdict
@@ -92,10 +92,10 @@ def train():
                                                                 model_parameters=ds_model_params,
                                                         training_data=train_dataset)
 
-    pbar = trange(params.get("train_steps", 1), mininterval=10., desc='Training Model', dynamic_ncols=True)
+    pbar = tqdm(enumerate(train_loader), mininterval=10., desc='Training Model', dynamic_ncols=True)
     for _ in pbar:
         for i, data in enumerate(train_loader):
-            if i > params["train_steps"]:
+            if i > 10000:
                 break
             model_engine.train()
             is_main = model_engine.local_rank == 0
