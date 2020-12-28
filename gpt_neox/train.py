@@ -93,36 +93,36 @@ def train():
                                                         training_data=train_dataset)
 
     pbar = tqdm(enumerate(train_loader), mininterval=10., desc='Training Model', dynamic_ncols=True)
-    for _ in pbar:
-        for i, data in enumerate(train_loader):
-            if i > 10000:
-                break
-            model_engine.train()
-            is_main = model_engine.local_rank == 0
-            data = data.to(model_engine.local_rank)
+    #for _ in pbar:
+    for i, data in pbar:
+        if i > 10000:
+            break
+        model_engine.train()
+        is_main = model_engine.local_rank == 0
+        data = data.to(model_engine.local_rank)
 
-            loss = model_engine(data)
-            model_engine.backward(loss)
-            model_engine.step()
+        loss = model_engine(data)
+        model_engine.backward(loss)
+        model_engine.step()
 
-            pbar.set_description(f'Training Loss: {loss.item():.4f}')
-            pbar.update()
+        pbar.set_description(f'Training Loss: {loss.item():.4f}')
+        pbar.update()
 
-            if params.get("validate_every") is not None:
-                if is_main and i % params["validate_every"] == 0:
-                    model_engine.eval()
-                    with torch.no_grad():
-                        val_data = next(val_loader).cuda()
-                        loss = model_engine(val_data)
-                        pbar.write(f'Validation Loss: {loss.item()}')
-
-            if params.get("generate_every") is not None:
-                if is_main and i % params["generate_every"] == 0:
-                    model.eval()
+        if params.get("validate_every") is not None:
+            if is_main and i % params["validate_every"] == 0:
+                model_engine.eval()
+                with torch.no_grad():
                     val_data = next(val_loader).cuda()
-                    inp = random.choice(val_data)[:-1]
-                    prime = tokenizer.decode(inp)
-                    pbar.write(f"{prime} \n\n {'*' * 100}")
-                    sample = model.generate(inp.cuda(), params["generate_length"])
-                    output_str = tokenizer.decode(sample)
-                    pbar.write(output_str)
+                    loss = model_engine(val_data)
+                    pbar.write(f'Validation Loss: {loss.item()}')
+
+        if params.get("generate_every") is not None:
+            if is_main and i % params["generate_every"] == 0:
+                model.eval()
+                val_data = next(val_loader).cuda()
+                inp = random.choice(val_data)[:-1]
+                prime = tokenizer.decode(inp)
+                pbar.write(f"{prime} \n\n {'*' * 100}")
+                sample = model.generate(inp.cuda(), params["generate_length"])
+                output_str = tokenizer.decode(sample)
+                pbar.write(output_str)
