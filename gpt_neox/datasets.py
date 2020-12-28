@@ -151,7 +151,7 @@ class TFDSDataset(Dataset):
     def tokenize(self, item):
         #txt = str(item['text'])
         #print(txt)
-        return self.tokenizer.encode(str(item['text']), max_length=self.seq_len, truncation=True, padding='max_length', return_tensors='pt')
+        return self.tokenizer.encode(str(item['text'], 'utf-8'), max_length=self.seq_len, truncation=True, padding='max_length', return_tensors='pt')
 
     def __getitem__(self, idx):
         return self.tokenize(next(self.data))
