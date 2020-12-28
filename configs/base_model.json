@@ -1,6 +1,6 @@
 {
   "num_epochs": 10,
-  "vocab_size": 256,
+  "vocab_size": null,
   "batch_size": 4,
   "learning_rate": 1e-4,
   "validate_every": 100,
@@ -10,5 +10,10 @@
   "hidden_dim": 512,
   "n_layers": 6,
   "n_heads": 8,
-  "dim_head": 64
+  "dim_head": 64,
+  "tokenizer": {
+    "type": "hf_gp2tokenizer",
+    "from_pretrained": true,
+    "add_padding_token": true
+  }
 }
