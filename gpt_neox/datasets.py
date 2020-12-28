@@ -1,12 +1,12 @@
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, IterableDataset
 from .data_utils import get_tokenizer, natural_sort, skip, FixedSizeOrderedDict
 import random
 import glob
 import tensorflow as tf
 import re
 import logging
-from itertools import cycle
+from itertools import cycle, chain
 from transformers import GPT2Tokenizer
 from gpt_neox.the_pile import ThePile
 import tensorflow_datasets as tfds
@@ -133,6 +133,40 @@ class TextSamplerDataset(Dataset):
 
     def __len__(self):
         return self.data.size(0) // self.seq_len
+
+class TFDSIterDataset(IterableDataset):
+    def __init__(self, tokenizer, seq_len, batch_size=8, split='train'):
+        super().__init__()
+        dataset, info = tfds.load(name="ThePile", try_gcs=True, with_info=True)
+        self.ds, self.num_examples = dataset[split], info.splits[split].num_examples
+        self.data = tfds.as_numpy(self.ds)
+        self.tokenizer = tokenizer
+        self.seq_len = seq_len
+        self.batch_size = batch_size
+        print(f'Items in {split} dataset: ', self.num_examples)
+    
+    def process_batch(self, batch):
+        for ex in batch:
+            worker = torch.utils.data.get_worker_info()
+            worker_id = id(self) if worker is not None else -1
+            example = self.tokenize(ex)
+            yield example
+
+    def get_stream(self, examples):
+        return chain.from_iterable(map(self.process_batch, cycle(examples)))
+
+    def get_streams(self):
+        return zip(*[self.get_stream(self.data)
+                    for _ in range(self.batch_size)])
+
+    def __iter__(self):
+        return self.get_streams()
+
+    def __len__(self):
+        return len(self.examples)
+    
+    def tokenize(self, item):
+        return self.tokenizer.encode(str(item['text'], 'utf-8'), max_length=self.seq_len, truncation=True, padding='max_length', return_tensors='pt')
 
 
 
