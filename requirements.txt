@@ -3,3 +3,4 @@ torch>=1.6
 tqdm>=4.50.0
 deepspeed
 transformers
+mpi4py

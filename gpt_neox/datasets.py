@@ -149,7 +149,7 @@ class TFDSDataset(Dataset):
         print(f'Items in {split} dataset: ', self.num_examples)
     
     def tokenize(self, item):
-        txt = item['text']
+        txt = str(item['text']).decode('utf-8')
         print(txt)
         return self.tokenizer.encode(txt, max_length=self.seq_len, truncation=True, padding='max_length', return_tensors='pt')
 
