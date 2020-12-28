@@ -163,7 +163,7 @@ class TFDSIterDataset(IterableDataset):
         return self.get_streams()
 
     def __len__(self):
-        return len(self.examples)
+        return self.num_examples
     
     def tokenize(self, item):
         return self.tokenizer.encode(str(item['text'], 'utf-8'), max_length=self.seq_len, truncation=True, padding='max_length', return_tensors='pt')
